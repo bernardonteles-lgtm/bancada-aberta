@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bancada Aberta · simulações 3D e lições interativas para o 3.º ciclo e o secundário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&display=swap">
+<style>
+  :root { --slate: #1c2324; --slate2: #232b2d; --panel: #283133; --line: #3a4547; --ink: #f2efe6; --dim: #aab3ad;
+          --chalk: #fad66b; --fis: #b28cf2; --mat: #f27a7a; --qui: #f79961; --bio: #80d18f; --geo: #dba876; --cn: #80d18f; --fq: #b28cf2; --pt: #75a8ff; --fil: #f9bd52; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font-family: "Atkinson Hyperlegible", system-ui, sans-serif; overflow: hidden; }
+  #wrap { position: fixed; inset: 0; }
+  #unity-canvas { width: 100%; height: 100%; display: block; background: var(--slate); outline: none; }
+  #loader { position: fixed; inset: 0; overflow-y: auto;
+      background: radial-gradient(900px 500px at 80% -10%, rgba(255,240,210,.06), transparent 60%),
+                  repeating-linear-gradient(180deg, transparent 0 31px, rgba(255,255,255,.025) 31px 32px), var(--slate); }
+  .page { position: relative; max-width: 1120px; margin: 0 auto; padding: max(28px, 5vh) 24px 48px; display: grid; gap: 30px; }
+  header { display: flex; gap: 18px; align-items: center; }
+  .logo { width: 68px; height: 68px; flex: none; }
+  h1 { font-family: "Zilla Slab", Georgia, serif; font-weight: 700; font-size: clamp(2.2rem, 5vw, 3.2rem); margin: 0; line-height: 1; letter-spacing: -.01em; }
+  h1 span { color: var(--chalk); }
+  .tag { color: var(--dim); margin: 8px 0 0; font-size: 1.05rem; }
+  .load { background: var(--slate2); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; }
+  .bar { height: 10px; background: #151b1c; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: var(--chalk); transition: width .25s; border-radius: 99px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .95rem; color: var(--dim); }
+  #status b { color: var(--ink); }
+  #err { color: #ff9b8a; }
+  .level { display: grid; gap: 12px; }
+  .level h2 { font-family: "Zilla Slab", Georgia, serif; font-weight: 600; font-size: 1.05rem; color: var(--dim); text-transform: uppercase; letter-spacing: .08em;
+              margin: 0; display: flex; align-items: center; gap: 12px; }
+  .level h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .subj { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px 12px; position: relative; overflow: hidden; }
+  .subj::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+  .subj h3 { font-family: "Zilla Slab", Georgia, serif; font-size: 1.25rem; margin: 0 0 2px; font-weight: 700; }
+  .subj p { margin: 0 0 10px; color: var(--dim); font-size: .85rem; }
+  .yr { font-size: .75rem; font-weight: 700; color: var(--c); letter-spacing: .06em; text-transform: uppercase; margin: 10px 0 4px; }
+  .subj ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: .92rem; }
+  .subj li { padding-left: 14px; position: relative; }
+  .subj li::before { content: ""; position: absolute; left: 0; top: .58em; width: 6px; height: 6px; border-radius: 50%; background: var(--c); opacity: .8; }
+  .new { font-size: .66rem; font-weight: 700; color: #1c2324; background: var(--chalk); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 1px; }
+  .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .tips div { border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: .92rem; color: var(--dim); }
+  .tips b { color: var(--ink); }
+  footer { color: var(--dim); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 14px; }
+  #tools { position: fixed; right: 6px; bottom: 6px; display: none; gap: 8px; }
+  #tools button { font: inherit; font-size: 15px; line-height: 1; background: rgba(28,35,36,.55); color: var(--ink); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; width: 30px; height: 30px; padding: 0; cursor: pointer; opacity: .55; transition: opacity .15s; }
+  #tools button:hover, #tools button:focus-visible { opacity: 1; border-color: var(--chalk); }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="unity-canvas" tabindex="-1"></canvas></div>
+<div id="tools"><button id="fs" type="button" title="Ecrã inteiro (F11 também funciona)" aria-label="Ecrã inteiro">⤢</button></div>
+<div id="loader">
+  <div class="page">
+    <header>
+      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="13" fill="#222a2c" stroke="#505c5a" stroke-width="1.5"/><defs><clipPath id="fl"><path d="M27 12h10v16l13 23H14l13-23z"/></clipPath></defs><g clip-path="url(#fl)"><rect x="0" y="35" width="64" height="6" fill="#73b2f2"/><rect x="0" y="41" width="64" height="5" fill="#f79961"/><rect x="0" y="46" width="64" height="8" fill="#80d18f"/></g><path d="M24.5 12h15M27 12v16l-13 23h36L37 28V12" fill="none" stroke="#f4f0e5" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="33.5" cy="31" r="1.3" fill="none" stroke="#fad66b" stroke-width=".9"/><circle cx="30" cy="28" r=".9" fill="none" stroke="#fad66b" stroke-width=".8"/></svg>
+      <div>
+        <h1>Bancada <span>Aberta</span></h1>
+        <p class="tag">Simulações 3D, lições interativas e exercícios · Matemática, Ciências, Português e Filosofia, do 7.º ao 12.º ano · exames nacionais de 2017 a 2026 com ajudas · gratuitas e de código aberto</p>
+      </div>
+    </header>
+
+    <section class="load" aria-live="polite">
+      <div class="bar"><div id="fill"></div></div>
+      <div class="row"><span id="status">A preparar…</span><span id="size">cerca de 20 MB · cada exame descarrega-se quando o abres</span></div>
+    </section>
+
+    <section class="level proto" aria-label="Exames nacionais">
+      <h2>Exames nacionais</h2>
+      <div class="grid">
+        <div class="subj" style="--c: var(--chalk)">
+          <h3>Como funciona</h3><p>No menu, separador «Exames». Em cada item, «Simular» abre a bancada com os dados do item e a pergunta à vista.</p>
+          <ul><li>Faz-se como uma prova normal, com relógio</li><li>Respostas de escolha múltipla na margem esquerda</li><li>«Entregar e corrigir» no fim</li><li>Ao lado de cada pergunta: Dica, Gráfico, Simular (ou Lição) e Critérios</li></ul>
+        </div>
+        <div class="subj" style="--c: var(--mat)">
+          <h3>Matemática A · 635</h3><p>Com ajudas: todas as provas de 2017 a 2026, 1.ª e 2.ª fase</p>
+        </div>
+        <div class="subj" style="--c: var(--fq)">
+          <h3>Física e Química A · 715</h3><p>Com ajudas: todas as provas de 2017 a 2026, 1.ª e 2.ª fase</p>
+        </div>
+        <div class="subj" style="--c: var(--bio)">
+          <h3>Biologia e Geologia · 702</h3><p>Com ajudas: todas as provas de 2017 a 2026, 1.ª e 2.ª fase</p>
+        </div>
+        <div class="subj" style="--c: var(--pt)">
+          <h3>Português · 639 <span class="new">NOVO</span></h3><p>2017 a 2026, 1.ª e 2.ª fase · «Lição» abre o diagrama ou o mapa ligado ao item</p>
+        </div>
+        <div class="subj" style="--c: var(--fil)">
+          <h3>Filosofia · 714 <span class="new">NOVO</span></h3><p>2017 a 2026, 1.ª e 2.ª fase · «Lição» abre o mapa de posições ligado ao item</p>
+        </div>
+      </div>
+      <p class="tag" style="margin-top:14px">Fonte: enunciados e critérios de classificação dos Exames Finais Nacionais publicados pelo IAVE, I.P. (desde 2026, EduQA, I.P.), reproduzidos para uso educativo e sem fins comerciais. Cada prova indica a fonte no topo.</p>
+    </section>
+
+    <section class="level" aria-label="3.º ciclo">
+      <h2>3.º ciclo</h2>
+      <div class="grid">
+        <div class="subj" style="--c: var(--mat)">
+          <h3>Matemática <span class="new">NOVO</span></h3><p>Números · Álgebra · Geometria e Medida · Dados e Probabilidades</p>
+          <div class="yr">7.º ano</div><ul><li>Números inteiros e racionais na reta</li><li>Equações do 1.º grau: a balança</li><li>Funções e proporcionalidade direta</li><li>Ângulos e polígonos</li><li>Semelhança de figuras e homotetia</li><li>Dados e probabilidades: lançar dados</li></ul>
+          <div class="yr">8.º ano</div><ul><li>Potências e notação científica</li><li>Teorema de Pitágoras</li><li>Funções afins e sistemas de equações</li><li>Vetores, translações e frisos</li><li>Planificações, áreas e volumes de sólidos</li><li>Probabilidade frequencista e quartis</li></ul>
+          <div class="yr">9.º ano</div><ul><li>Números reais e intervalos</li><li>Funções quadráticas e proporcionalidade inversa</li><li>Casos notáveis e equações do 2.º grau</li><li>Trigonometria no triângulo retângulo</li><li>Circunferência: ângulo ao centro e inscrito</li><li>Probabilidades: regra de Laplace</li></ul>
+        </div>
+        <div class="subj" style="--c: var(--cn)">
+          <h3>Ciências Naturais</h3><p>Terra em transformação · Terra, um planeta com vida · Viver melhor na Terra</p>
+          <div class="yr">7.º ano</div><ul><li>Rochas e ciclo das rochas <span class="new">NOVO</span></li><li>Deriva dos continentes e tectónica de placas <span class="new">NOVO</span></li><li>Sismos e estrutura interna da Terra</li><li>Vulcões e rochas magmáticas</li><li>Dobras, falhas e tempo geológico</li></ul>
+          <div class="yr">8.º ano</div><ul><li>A célula: unidade da vida</li><li>Ecossistemas: teias alimentares <span class="new">NOVO</span></li><li>Ciclos do carbono e do oxigénio <span class="new">NOVO</span></li><li>Fatores abióticos: luz, temperatura e água</li><li>Perturbações e gestão de recursos <span class="new">NOVO</span></li></ul>
+          <div class="yr">9.º ano</div><ul><li>O corpo humano: sistemas em interação <span class="new">NOVO</span></li><li>Sistema cardiorrespiratório <span class="new">NOVO</span></li><li>Sistema urinário <span class="new">NOVO</span></li><li>Sistemas nervoso e hormonal <span class="new">NOVO</span></li><li>Do ADN à proteína</li></ul>
+        </div>
+        <div class="subj" style="--c: var(--fq)">
+          <h3>Físico-Química</h3><p>Espaço · Materiais · Energia · Reações · Som e luz · Movimentos · Eletricidade</p>
+          <div class="yr">7.º ano</div><ul><li>Terra, Lua e Sol: fases, eclipses, estações <span class="new">NOVO</span></li><li>Substâncias, misturas e separação <span class="new">NOVO</span></li><li>Estados físicos e mudanças de estado</li><li>Densidade e flutuação <span class="new">NOVO</span></li><li>Fontes e transferências de energia</li></ul>
+          <div class="yr">8.º ano</div><ul><li>Reações químicas: átomos que se reorganizam <span class="new">NOVO</span></li><li>Velocidade das reações <span class="new">NOVO</span></li><li>Som: produção e atributos</li><li>Luz: reflexão e refração</li><li>Luz e cor: espetros</li></ul>
+          <div class="yr">9.º ano</div><ul><li>Movimentos e forças</li><li>Impulsão e Lei de Arquimedes <span class="new">NOVO</span></li><li>Circuitos elétricos</li><li>Estrutura atómica e Tabela Periódica <span class="new">NOVO</span></li><li>Ligação química <span class="new">NOVO</span></li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="level" aria-label="Secundário">
+      <h2>Secundário</h2>
+      <div class="grid">
+        <div class="subj" style="--c: var(--mat)">
+          <h3>Matemática A <span class="new">NOVO</span></h3><p>10.º, 11.º e 12.º anos · Aprendizagens Essenciais de 2023</p>
+          <div class="yr">10.º ano</div><ul><li>Eleições: o método de Hondt</li><li>Finanças: juros simples e compostos</li><li>Estatística: histogramas e medidas</li><li>Dados bivariados: correlação e regressão</li><li>Pontos notáveis do triângulo</li><li>Funções: transformações de gráficos</li><li>Referencial no espaço</li><li>Vetores e equação vetorial da reta</li></ul>
+          <div class="yr">11.º ano</div><ul><li>Círculo trigonométrico</li><li>Funções trigonométricas</li><li>Produto escalar</li><li>Taxa de variação e derivada</li><li>Sucessões e progressões</li><li>Técnicas de contagem e triângulo de Pascal</li></ul>
+          <div class="yr">12.º ano</div><ul><li>Números complexos</li><li>Probabilidade e distribuição binomial</li><li>Funções exponencial e logarítmica</li></ul>
+        </div>
+        <div class="subj" style="--c: var(--fis)">
+          <h3>Física e Química A</h3><p>10.º e 11.º anos</p>
+          <div class="yr">10.º ano</div><ul><li>Espetros e níveis de energia</li><li>Soluções e diluições</li><li>Energia num plano inclinado</li><li>Pilhas e painéis fotovoltaicos</li><li>Calor e mudanças de estado</li></ul>
+          <div class="yr">11.º ano</div><ul><li>Queda livre e forças</li><li>Som e luz</li><li>Equilíbrio químico</li><li>Titulação ácido-base</li><li>Oxidação-redução e solubilidade</li><li>Movimentos à escala real <span class="new">NOVO</span></li></ul>
+        </div>
+        <div class="subj" style="--c: var(--bio)">
+          <h3>Biologia e Geologia</h3><p>10.º e 11.º anos</p>
+          <div class="yr">10.º ano</div><ul><li>Tempo geológico e datação</li><li>Sismos e interior da Terra</li><li>Membrana e osmose</li><li>Fotossíntese: fatores limitantes</li><li>Fermentação e respiração</li></ul>
+          <div class="yr">11.º ano</div><ul><li>Do ADN à proteína</li><li>Mitose e meiose</li><li>Seleção natural <span class="new">NOVO</span></li><li>Magmas e cristalização</li><li>Deformação: falhas e dobras</li><li>Rochas sedimentares e metamórficas <span class="new">NOVO</span></li><li>Recursos geológicos: água e hidrocarbonetos <span class="new">NOVO</span></li></ul>
+        </div>
+        <div class="subj" style="--c: var(--pt)">
+          <h3>Português <span class="new">NOVO</span></h3><p>Lições interativas: linhas do tempo, mapas de personagens, análise de frases</p>
+          <div class="yr">10.º ano</div><ul><li>Poesia trovadoresca</li><li>Fernão Lopes: Crónica de D. João I</li><li>Gil Vicente: Farsa de Inês Pereira e Auto da Índia</li><li>Camões lírico: redondilhas e sonetos</li><li>Os Lusíadas: estrutura e reflexões do Poeta</li><li>Funções sintáticas e orações</li><li>Do latim ao português: fonologia e léxico</li><li>Modalidade, atos de fala e coesão</li></ul>
+          <div class="yr">11.º ano</div><ul><li>Padre António Vieira: Sermão de Santo António</li><li>Almeida Garrett: Frei Luís de Sousa</li><li>Camilo Castelo Branco: Amor de Perdição</li><li>Eça de Queirós: Os Maias</li><li>Antero de Quental: sonetos</li><li>Reprodução do discurso, deixis e coesão</li></ul>
+          <div class="yr">12.º ano</div><ul><li>Fernando Pessoa ortónimo</li><li>Os heterónimos: Caeiro, Reis e Campos</li><li>Mensagem</li><li>Cesário Verde</li><li>José Saramago: Memorial do Convento</li><li>O Ano da Morte de Ricardo Reis</li><li>O conto: «George»</li><li>Poetas contemporâneos</li><li>O texto dramático: Antígona e outras peças</li><li>Valor aspetual e palavras novas</li></ul>
+        </div>
+        <div class="subj" style="--c: var(--fil)">
+          <h3>Filosofia <span class="new">NOVO</span></h3><p>Lições interativas: mapas de posições, argumentos e objeções, tabelas de verdade</p>
+          <div class="yr">10.º ano</div><ul><li>Tese, argumento, falácias e retórica</li><li>Lógica proposicional</li><li>Determinismo e liberdade</li><li>A natureza dos juízos morais</li><li>Kant e Mill: o critério da moralidade</li><li>Rawls e os seus críticos</li></ul>
+          <div class="yr">11.º ano</div><ul><li>Descartes e Hume: o conhecimento</li><li>Popper e Kuhn: a ciência</li><li>O que é a arte?</li><li>Deus, razão e fé</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="tips">
+      <div><b>Roteiros:</b> cada simulação tem uma atividade guiada, passo a passo, com verificação dos valores que mediste na bancada.</div>
+      <div><b>Lições:</b> em Português e Filosofia, em vez de bancada há lições interativas — fichas, linhas do tempo, mapas de posições com argumentos e objeções, frases para desmontar.</div>
+      <div><b>Exames:</b> no menu, separador «Exames» — 100 provas nacionais (Matemática A, FQ A, BG, Português e Filosofia), com Dica, Gráfico, Simular ou Lição, e Critérios em cada item.</div>
+      <div><b>Exercícios:</b> cada simulação e lição tem uma ficha (correção a cada item) e um teste com classificação, com escolha múltipla, verdadeiro ou falso, cálculo, ordenação, associação e completamento.</div>
+      <div><b>No projetor:</b> use «Ecrã inteiro» e os botões A− / A+ do menu para aumentar o texto.</div>
+      <div><b>Câmara:</b> arrastar roda a vista e a roda do rato aproxima. <b>Esc</b> volta ao menu.</div>
+      <div><b>Professores:</b> o sistema reprodutor do modelo do corpo humano só aparece se o ativar no painel (secção «Professor»).</div>
+    </section>
+
+    <footer>Cada simulação é um modelo simplificado: serve para observar, prever e discutir, e não substitui o trabalho laboratorial. Organizado pelas Aprendizagens Essenciais (DGE). Feito em Unity, Blender e Python. Tipos de letra Atkinson Hyperlegible e Zilla Slab (SIL OFL); mapa da Terra Natural Earth.</footer>
+  </div>
+</div>
+<script>
+  const canvas = document.getElementById("unity-canvas");
+  const fill = document.getElementById("fill");
+  const status = document.getElementById("status");
+  const config = {
+    dataUrl: "", frameworkUrl: "Build/Web.framework.js", codeUrl: "", streamingAssetsUrl: "StreamingAssets",
+    companyName: "Bancada Aberta", productName: "Bancada Aberta", productVersion: "0.5.0",
+    showBanner: (msg, type) => { if (type === "error") showError(msg); },
+  };
+  // sharp enough on high-density screens without drawing 4× the pixels (the main cause of lag on school laptops)
+  config.devicePixelRatio = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+  function showError(msg) { status.innerHTML = '<span id="err"></span>'; document.getElementById("err").textContent = msg; }
+  // The engine and the data travel as base64 text files (the host serves only web file types);
+  // they become files in memory again and go to the Unity loader, which decompresses them.
+  let loaded = 0;
+  function load(src, share) {
+    return new Promise((ok, fail) => {
+      const t = document.createElement("script"); t.src = src;
+      t.onload = () => { loaded += share; fill.style.width = Math.round(loaded * 60) + "%"; ok(); };
+      t.onerror = () => fail(src);
+      document.body.appendChild(t);
+    });
+  }
+  function blobUrl(b64) {
+    const bin = atob(b64), n = bin.length, u8 = new Uint8Array(n);
+    for (let i = 0; i < n; i++) u8[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([u8], { type: "application/octet-stream" }));
+  }
+  status.innerHTML = "<b>A descarregar</b> as simulações…";
+  const PARTS = 2;
+  Promise.all([load("Build/Web.loader.js", 0.02), load("Build/code.b64.js", 0.1)].concat(Array.from({ length: PARTS }, (_, i) => load("Build/data" + i + ".b64.js", 0.88 / PARTS)))).then(() => {
+    status.innerHTML = "<b>A preparar</b> o laboratório…";
+    setTimeout(() => {
+      config.codeUrl = blobUrl(window.BA_CODE); window.BA_CODE = null;
+      config.dataUrl = blobUrl(window.BA_DATA.join("")); window.BA_DATA = null;
+      // the base64 text is no longer needed: drop the script elements so the browser can free it
+      document.querySelectorAll('script[src^="Build/"]').forEach((t) => t.remove());
+      start();
+    }, 30);
+  }).catch((f) => showError("Não foi possível carregar os ficheiros da aplicação (" + f + "). Verifique a ligação e recarregue a página."));
+  function start() {
+    createUnityInstance(canvas, config, (p) => {
+      fill.style.width = Math.round(60 + p * 40) + "%";
+      status.innerHTML = p < 0.9 ? "<b>A iniciar</b> a bancada… " + Math.round(p * 100) + "%" : "<b>Quase pronto…</b>";
+    }).then((instance) => {
+      document.getElementById("loader").style.display = "none";
+      URL.revokeObjectURL(config.codeUrl); URL.revokeObjectURL(config.dataUrl);
+      const tools = document.getElementById("tools");
+      tools.style.display = "flex";
+      document.getElementById("fs").onclick = () => instance.SetFullscreen(1);
+      canvas.focus();
+    }).catch((m) => showError("Não foi possível abrir as simulações neste navegador: " + m));
+  }
+</script>
+</body>
+</html>
