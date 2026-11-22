@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&display=swap">
 <style>
-  :root { --slate: #1c2324; --slate2: #232b2d; --panel: #283133; --line: #3a4547; --ink: #f2efe6; --dim: #aab3ad;
+  :root { --slate: #263430; --slate2: #2b3a35; --panel: #2f3e39; --line: #55625c; --ink: #f2efe6; --dim: #aab3ad;
           --chalk: #fad66b; --fis: #b28cf2; --mat: #f27a7a; --qui: #f79961; --bio: #80d18f; --geo: #dba876; --cn: #80d18f; --fq: #b28cf2; --pt: #75a8ff; --fil: #f9bd52; color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font-family: "Atkinson Hyperlegible", system-ui, sans-serif; overflow: hidden; }
@@ -23,9 +23,9 @@
   h1 { font-family: "Zilla Slab", Georgia, serif; font-weight: 700; font-size: clamp(2.2rem, 5vw, 3.2rem); margin: 0; line-height: 1; letter-spacing: -.01em; }
   h1 span { color: var(--chalk); }
   .tag { color: var(--dim); margin: 8px 0 0; font-size: 1.05rem; }
-  .load { background: var(--slate2); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; }
-  .bar { height: 10px; background: #151b1c; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
-  .bar > div { height: 100%; width: 0%; background: var(--chalk); transition: width .25s; border-radius: 99px; }
+  .load { background: var(--slate2); border: 1px solid var(--line); border-radius: 3px; padding: 18px 20px; display: grid; gap: 10px; }
+  .bar { height: 10px; background: #151b1c; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: var(--chalk); transition: width .25s; border-radius: 2px; }
   .row { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .95rem; color: var(--dim); }
   #status b { color: var(--ink); }
   #err { color: #ff9b8a; }
@@ -34,7 +34,7 @@
               margin: 0; display: flex; align-items: center; gap: 12px; }
   .level h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
-  .subj { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px 12px; position: relative; overflow: hidden; }
+  .subj { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 16px 18px 12px; position: relative; overflow: hidden; }
   .subj::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
   .subj h3 { font-family: "Zilla Slab", Georgia, serif; font-size: 1.25rem; margin: 0 0 2px; font-weight: 700; }
   .subj p { margin: 0 0 10px; color: var(--dim); font-size: .85rem; }
@@ -44,7 +44,7 @@
   .subj li::before { content: ""; position: absolute; left: 0; top: .58em; width: 6px; height: 6px; border-radius: 50%; background: var(--c); opacity: .8; }
   .new { font-size: .66rem; font-weight: 700; color: #1c2324; background: var(--chalk); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 1px; }
   .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-  .tips div { border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: .92rem; color: var(--dim); }
+  .tips div { border: 1px dashed var(--line); border-radius: 3px; padding: 12px 14px; font-size: .92rem; color: var(--dim); }
   .tips b { color: var(--ink); }
   footer { color: var(--dim); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 14px; }
   #tools { position: fixed; right: 6px; bottom: 6px; display: none; gap: 8px; }
@@ -170,7 +170,7 @@
   const canvas = document.getElementById("unity-canvas");
   const fill = document.getElementById("fill");
   const status = document.getElementById("status");
-  const BUILD = "1a5510c05c";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
+  const BUILD = "0f113d1aae";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
   const config = {
     dataUrl: "", frameworkUrl: "Build/Web.framework.js?v=" + BUILD, codeUrl: "", streamingAssetsUrl: "StreamingAssets",
     companyName: "Bancada Aberta", productName: "Bancada Aberta", productVersion: "0.5.0",
