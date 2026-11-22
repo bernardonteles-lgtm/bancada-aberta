@@ -170,7 +170,7 @@
   const canvas = document.getElementById("unity-canvas");
   const fill = document.getElementById("fill");
   const status = document.getElementById("status");
-  const BUILD = "2bc707db75";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
+  const BUILD = "085d0b53a3";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
   const config = {
     dataUrl: "", frameworkUrl: "Build/Web.framework.js?v=" + BUILD, codeUrl: "", streamingAssetsUrl: "StreamingAssets",
     companyName: "Bancada Aberta", productName: "Bancada Aberta", productVersion: "0.5.0",
@@ -196,7 +196,7 @@
     return URL.createObjectURL(new Blob([u8], { type: "application/octet-stream" }));
   }
   status.innerHTML = "<b>A descarregar</b> as simulações…";
-  const PARTS = 2;
+  const PARTS = 3;
   Promise.all([load("Build/Web.loader.js?v=" + BUILD, 0.02), load("Build/code.b64.js?v=" + BUILD, 0.1)].concat(Array.from({ length: PARTS }, (_, i) => load("Build/data" + i + ".b64.js?v=" + BUILD, 0.88 / PARTS)))).then(() => {
     status.innerHTML = "<b>A preparar</b> o laboratório…";
     setTimeout(() => {
