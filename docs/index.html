@@ -171,6 +171,12 @@
   const fill = document.getElementById("fill");
   const status = document.getElementById("status");
   const BUILD = "085d0b53a3";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
+  // GitHub lets browsers keep this page for 10 minutes: ask (never from the cache) which build is the latest and, when
+  // it is not the one this page was made for, load the page again with the new build in its address
+  fetch("version.txt?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.text() : "").then((v) => {
+    v = (v || "").trim();
+    if (v && v !== BUILD && !location.search.includes("v=" + v)) location.replace(location.pathname + "?v=" + v + location.hash);
+  }).catch(() => {});
   const config = {
     dataUrl: "", frameworkUrl: "Build/Web.framework.js?v=" + BUILD, codeUrl: "", streamingAssetsUrl: "StreamingAssets",
     companyName: "Bancada Aberta", productName: "Bancada Aberta", productVersion: "0.5.0",
