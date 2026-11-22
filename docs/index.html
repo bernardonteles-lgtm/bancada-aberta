@@ -170,8 +170,9 @@
   const canvas = document.getElementById("unity-canvas");
   const fill = document.getElementById("fill");
   const status = document.getElementById("status");
+  const BUILD = "a139ff647a";   // a new build gets a new value (packsite.sh), so browsers never keep an old copy
   const config = {
-    dataUrl: "", frameworkUrl: "Build/Web.framework.js", codeUrl: "", streamingAssetsUrl: "StreamingAssets",
+    dataUrl: "", frameworkUrl: "Build/Web.framework.js?v=" + BUILD, codeUrl: "", streamingAssetsUrl: "StreamingAssets",
     companyName: "Bancada Aberta", productName: "Bancada Aberta", productVersion: "0.5.0",
     showBanner: (msg, type) => { if (type === "error") showError(msg); },
   };
@@ -196,7 +197,7 @@
   }
   status.innerHTML = "<b>A descarregar</b> as simulações…";
   const PARTS = 2;
-  Promise.all([load("Build/Web.loader.js", 0.02), load("Build/code.b64.js", 0.1)].concat(Array.from({ length: PARTS }, (_, i) => load("Build/data" + i + ".b64.js", 0.88 / PARTS)))).then(() => {
+  Promise.all([load("Build/Web.loader.js?v=" + BUILD, 0.02), load("Build/code.b64.js?v=" + BUILD, 0.1)].concat(Array.from({ length: PARTS }, (_, i) => load("Build/data" + i + ".b64.js?v=" + BUILD, 0.88 / PARTS)))).then(() => {
     status.innerHTML = "<b>A preparar</b> o laboratório…";
     setTimeout(() => {
       config.codeUrl = blobUrl(window.BA_CODE); window.BA_CODE = null;
